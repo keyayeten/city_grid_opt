@@ -73,6 +73,8 @@ class CityGrid:
             pass
 
     def set_tower(self, x, y, radius):
+        if self.city_map[y][x] == "block":
+            raise ValueError("Cannot place tower on a block")
         self.city_map[y][x] = "Tower"
         for i in range(y-radius, y+radius+1):
             for j in range(x-radius, x+radius+1):
