@@ -1,4 +1,6 @@
 from random import randint
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 class SideRange:
@@ -64,7 +66,8 @@ class CityGrid:
 
     def __set_coverage_of_tover(self, x, y):
         try:
-            if self.city_map[x][y] != "Tower" and x >= 0 and y >= 0:
+            if (self.city_map[x][y] != "Tower" and x >= 0
+                    and y >= 0 and self.city_map[x][y] != "block"):
                 self.city_map[x][y] = "т"
         except IndexError:
             pass
@@ -78,8 +81,19 @@ class CityGrid:
     def __str__(self):
         return "\n".join(map(lambda x: "\t".join(x), self.city_map))
 
+    def __convert_for_vizualization(self) -> list[list[int]]:
+        return [[0 if i == "-" else 1 if i == "Tower" or i == "т" else -1
+                 for i in j]
+                for j in self.city_map]
+
+    def visualize_map(self):
+        converted = self.__convert_for_vizualization()
+        sns.heatmap(converted, cmap='coolwarm', annot=True)
+        plt.show()
+
 
 if __name__ == "__main__":
     c1 = CityGrid(7, 7, 0.3)
-    c1.set_tower(0, 0, 2)
+    c1.set_tower(2, 1, 2)
     print(c1)
+    c1.visualize_map()
