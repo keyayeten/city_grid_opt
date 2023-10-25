@@ -59,13 +59,27 @@ class CityGrid:
         for _ in range(int(rows * columns * coverage)):
             x = randint(0, rows-1)
             y = randint(0, columns-1)
-            while city_map[x][y] != 'x':
-                city_map[x][y] = 'x'
+            while city_map[x][y] != 'block':
+                city_map[x][y] = 'block'
+
+    def __set_coverage_of_tover(self, x, y):
+        try:
+            if self.city_map[x][y] != "Tower" and x >= 0 and y >= 0:
+                self.city_map[x][y] = "т"
+        except IndexError:
+            pass
+
+    def set_tower(self, x, y, radius):
+        self.city_map[y][x] = "Tower"
+        for i in range(y-radius, y+radius+1):
+            for j in range(x-radius, x+radius+1):
+                self.__set_coverage_of_tover(i, j)
 
     def __str__(self):
         return "\n".join(map(lambda x: "\t".join(x), self.city_map))
 
 
 if __name__ == "__main__":
-    c1 = CityGrid(3, 4, 0.3)
+    c1 = CityGrid(7, 7, 0.3)
+    c1.set_tower(0, 0, 2)
     print(c1)
