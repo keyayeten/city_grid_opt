@@ -75,6 +75,7 @@ class CityGrid:
     def set_tower(self, x, y, radius):
         if self.city_map[y][x] == "block":
             raise ValueError("Cannot place tower on a block")
+
         self.city_map[y][x] = "Tower"
         for i in range(y-radius, y+radius+1):
             for j in range(x-radius, x+radius+1):
@@ -84,7 +85,8 @@ class CityGrid:
         return "\n".join(map(lambda x: "\t".join(x), self.city_map))
 
     def __convert_for_vizualization(self) -> list[list[int]]:
-        return [[0 if i == "-" else 1 if i == "Tower" or i == "т" else -1
+        return [[0 if i == "-" else
+                 1 if i == "Tower" or i == "т" else -1
                  for i in j]
                 for j in self.city_map]
 
