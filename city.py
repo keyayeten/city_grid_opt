@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, choice, uniform
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -52,21 +52,25 @@ class CityGrid:
                          for _ in range(rows)]
         self.towers = []
         self.blocks = []
+        self.paths = {}
 
-        self.__init_blocks(self.city_map,
-                           self.rows,
-                           self.columns,
-                           self.coverage)
+        self.__init_blocks()
 
-    def __init_blocks(self, city_map, rows, columns, coverage):
-        for _ in range(int(rows * columns * coverage)):
-            x = randint(0, rows-1)
-            y = randint(0, columns-1)
-            while city_map[x][y] != 'block':
-                city_map[x][y] = 'block'
+    def __init_blocks(self):
+
+        """Initializing blocks to city map"""
+
+        for _ in range(int(self.rows * self.columns * self.coverage)):
+            x = randint(0, self.rows-1)
+            y = randint(0, self.columns-1)
+            while self.city_map[x][y] != 'block':
+                self.city_map[x][y] = 'block'
                 self.blocks.append((x, y))
 
-    def __set_coverage_of_tover(self, x, y):
+    def __set_coverage_of_tover(self, x: int, y: int):
+
+        """Sets area of tower coverage."""
+
         try:
             if (self.city_map[x][y] != "Tower" and x >= 0
                     and y >= 0 and self.city_map[x][y] != "block"):
@@ -74,7 +78,13 @@ class CityGrid:
         except IndexError:
             pass
 
-    def set_tower(self, x, y, radius):
+    def set_tower(self,
+                  x: int,
+                  y: int,
+                  radius: int):
+
+        """Sets tower with coverage area"""
+
         if self.city_map[y][x] == "block":
             raise ValueError("Cannot place tower on a block")
         self.city_map[y][x] = "Tower"
@@ -88,17 +98,26 @@ class CityGrid:
         return "\n".join(map(lambda x: "\t".join(x), self.city_map))
 
     def __convert_for_vizualization(self) -> list[list[int]]:
+
+        """Converts city map to integer lists"""
+
         return [[0 if i == "-" else
                  1 if i == "Tower" or i == "т" else -1
                  for i in j]
                 for j in self.city_map]
 
     def visualize_map(self):
+
+        """Vizuals city map as integer heatmap"""
+
         converted = self.__convert_for_vizualization()
         sns.heatmap(converted, cmap='coolwarm', annot=True)
         plt.show()
 
     def optimize_tower_placement(self, radius: int = 1):
+
+        """Sets optimal number of towers."""
+
         uncovered_blocks = []
         placed_towers = []
 
@@ -127,7 +146,13 @@ class CityGrid:
             uncovered_blocks = [b for b in uncovered_blocks
                                 if not self.is_block_covered(*b)]
 
-    def is_block_covered(self, x, y, radius: int = 1):
+    def is_block_covered(self,
+                         x: int,
+                         y: int,
+                         radius: int = 1) -> bool:
+
+        """Checks coverage of a block"""
+
         for i in range(x - radius, x + radius + 1):
             for j in range(y - radius, y + radius + 1):
                 if 0 <= i < self.rows and 0 <= j < self.columns:
@@ -135,7 +160,13 @@ class CityGrid:
                         return True
         return False
 
-    def calculate_block_coverage(self, x, y, radius: int = 1):
+    def calculate_block_coverage(self,
+                                 x: int,
+                                 y: int,
+                                 radius: int = 1) -> int:
+
+        """Returns block coverage"""
+
         covered_blocks = set()
 
         for i in range(x - radius, x + radius + 1):
@@ -146,13 +177,67 @@ class CityGrid:
 
         return len(covered_blocks)
 
+    def get_path(self,
+                 start: tuple[int, int],
+                 end: tuple[int, int]) -> list[tuple[int, int]]:
+
+        """Returns reliable path between two towers,
+        or empty list if path doesn't exist.
+        """
+
+        if (start, end) in self.paths:
+            return self.paths[(start, end)]
+
+        paths = [[start]]
+
+        while paths:
+            curr_path = paths.pop(0)
+            curr_pos = curr_path[-1]
+
+            if curr_pos == end:
+                self.paths[(start, end)] = curr_path
+                return curr_path
+
+            neighbors = self.get_neighbors(curr_pos)
+
+            for neighbor in neighbors:
+                if neighbor not in curr_path and neighbor not in self.blocks:
+                    new_path = curr_path + [neighbor]
+                    paths.append(new_path)
+
+        return []
+
+    def get_neighbors(self, coords: tuple[int, int]) -> list[tuple[int, int]]:
+
+        """Returns list of towers neighbours"""
+
+        x, y = coords
+        neighbors = []
+
+        for tower in self.towers:
+            tower_coords = tower['coords']
+            tower_radius = tower['radius']
+
+            dx = tower_coords[0] - x
+            dy = tower_coords[1] - y
+            distance = (dx**2 + dy**2)**0.5
+
+            if distance <= tower_radius:
+                neighbors.append(tower_coords)
+        return neighbors
+
 
 if __name__ == "__main__":
-    c1 = CityGrid(10, 10, 0.3)
+    c1 = CityGrid(randint(10, 20),
+                  randint(10, 20),
+                  uniform(0.3, 0.9))
+
     # c1.set_tower(2, 1, 2)
     print(c1)
 
-    c1.optimize_tower_placement(radius=2)
+    c1.optimize_tower_placement(radius=randint(1, 10))
     print(c1.towers)
     print(c1.blocks)
     c1.visualize_map()
+    print(c1.get_path(choice(c1.towers)["coords"],
+                      choice(c1.towers)["coords"],))
